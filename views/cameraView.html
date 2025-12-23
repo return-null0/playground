@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self' blob:;"
+/>
+
+
+    <title>Camera Mode</title>
+<link rel="stylesheet" href="styles/styles1.css">
+  </head>
+
+  <body>
+    <header>
+      <h1>Camera · Vision Mode</h1>
+      <button id="backBtn">← Back</button>
+    </header>
+
+    <main>
+      <div class="camera-container">
+        <video id="video" autoplay playsinline muted></video>
+
+<!-- Raw frame buffer (AI input) -->
+<canvas id="rawCanvas"></canvas>
+
+<!-- What the user actually sees -->
+<canvas id="previewCanvas"></canvas>
+        <div class="overlay"></div>
+      </div>
+    </main>
+
+    <footer>
+      Live camera feed — ready for AI inference
+    </footer>
+    
+    <script src="../scripts/camera.js"></script>
+  </body>
+</html>

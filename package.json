@@ -1,0 +1,15 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "description": "desktop playground for AI tools ",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \\\"Error: no test specified\\\" && exit 1"
+  },
+  "author": "Renaldo Hyacinthe",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^39.2.7"
+  }
+}
