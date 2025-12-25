@@ -5,3 +5,5 @@ dist/
 models/
 .DS_STORE
 .env
+out/
+dist/

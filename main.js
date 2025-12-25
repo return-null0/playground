@@ -2,10 +2,13 @@ require('dotenv').config();
 const { app, BrowserWindow, utilityProcess, ipcMain } = require('electron');
 const path = require("path");
 
+const iconPath = path.join(__dirname, 'imgs', 'icon.jpg');
+
 //  PERFORMANCE FLAGS 
 app.commandLine.appendSwitch('enable-unsafe-webgpu');
 app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
 
+app.setName('AI Playground');
 
 let mainWindow = null;
 let objDetectionWorker = null;
@@ -15,6 +18,7 @@ const createWindow = () => {
     width: 1000,
     height: 800,
     title: "AI Playground",
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, "scripts/preload.js"),
       nodeIntegration: false,
@@ -33,6 +37,10 @@ const createWindow = () => {
 
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin') {
+    app.dock.setIcon(iconPath);
+  }
+  
   createWindow();
 
   app.on('activate', () => {
