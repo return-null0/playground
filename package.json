@@ -11,5 +11,10 @@
   "license": "ISC",
   "devDependencies": {
     "electron": "^39.2.7"
+  },
+  "dependencies": {
+    "@electron/rebuild": "^4.0.2",
+    "@tensorflow/tfjs-node": "^4.22.0",
+    "onnxruntime-node": "file:../onnxruntime/js/node"
   }
 }

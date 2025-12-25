@@ -2,3 +2,5 @@ node_modules/
 dist/
 .vs_code/
 .vscode/
+models/
+.DS_STORE
