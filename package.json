@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@electron/rebuild": "^4.0.2",
+    "@mlc-ai/web-llm": "^0.2.80",
     "@tensorflow/tfjs-node": "^4.22.0",
+    "dotenv": "^17.2.3",
     "onnxruntime-node": "file:../onnxruntime/js/node"
   }
 }

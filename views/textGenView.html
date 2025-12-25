@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Playground · Text Mode</title>
+<link rel="stylesheet" href="styles/styles2.css">
+</head>
+<body>
+
+  <header>
+    <a href="../index.html" class="glass-btn">← Home</a>
+    
+    <h1>Text Generation</h1>
+    
+    <div class="glass-btn" style="cursor: default; opacity: 0.8;">
+       <span id="status">State: Idle</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="chat-container">
+        <div class="overlay-glow"></div>
+
+        <div id="chatHistory" class="chat-history">
+            <div class="message system">
+                <strong>Local AI Model</strong><br>
+                Ready to initialize. This will download the model weights (cached) and compile the GPU engine.
+                <br><br>
+                <button id="loadBtn" class="glass-btn" style="margin: 0 auto; display:block;">
+                  Initialize Engine
+                </button>
+            </div>
+        </div>
+
+        <div class="input-area">
+          <textarea id="promptInput" rows="1" placeholder="Type a message..." disabled></textarea>
+          
+          <div class="button-group">
+            <button id="sendBtn" disabled>Send</button>
+            <button id="stopBtn" class="stop-btn" style="display: none;">Stop</button>
+          </div>
+        </div>
+    </div>
+  </main>
+
+  <script type="module" src="../scripts/text.js"></script>
+</body>
+</html>

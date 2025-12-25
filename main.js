@@ -1,26 +1,36 @@
-const { app, BrowserWindow, utilityProcess, ipcMain } = require('electron/main');
+require('dotenv').config();
+const { app, BrowserWindow, utilityProcess, ipcMain } = require('electron');
 const path = require("path");
 
-// Define mainWindow globally so we can access it inside IPC handlers
+//  PERFORMANCE FLAGS 
+app.commandLine.appendSwitch('enable-unsafe-webgpu');
+app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer');
+
+
 let mainWindow = null;
 let objDetectionWorker = null;
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1000,
+    height: 800,
+    title: "AI Playground",
     webPreferences: {
-      preload: path.join(__dirname, "scripts/preload.js")
+      preload: path.join(__dirname, "scripts/preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true
     }
   });
 
   mainWindow.loadFile('index.html');
 
-  // Cleanup on close
   mainWindow.on('closed', () => {
     mainWindow = null;
+
+    if (objDetectionWorker) objDetectionWorker.kill();
   });
 };
+
 
 app.whenReady().then(() => {
   createWindow();
@@ -38,31 +48,19 @@ app.on('window-all-closed', () => {
   }
 });
 
-/**
- * Start object detection worker
- */
-ipcMain.handle("start-object-worker", () => {
-  if (objDetectionWorker) return;
 
+ipcMain.handle("start-object-worker", () => {
+  // Reuse existing worker if user navigated away and came back
+  if (objDetectionWorker) return;
 
   objDetectionWorker = utilityProcess.fork(
     path.join(__dirname, "scripts/objDetectionWorker.js"),
     [],
-    {
-      stdio: "pipe"
-    }
+    { stdio: "pipe" }
   );
 
-
-  
-  objDetectionWorker.stdout.on('data', (data) => {
-    console.log(`[Worker STDOUT]: ${data.toString()}`);
-  });
-
-  objDetectionWorker.stderr.on('data', (data) => {
-    console.error(`[Worker STDERR]: ${data.toString()}`);
-  });
-  
+  objDetectionWorker.stdout.on('data', (data) => console.log(`[Worker]: ${data}`));
+  objDetectionWorker.stderr.on('data', (data) => console.error(`[Worker Err]: ${data}`));
 
   objDetectionWorker.on("message", (msg) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -70,17 +68,15 @@ ipcMain.handle("start-object-worker", () => {
     }
   });
 
-  objDetectionWorker.on("exit", (code) => {
-    console.log("Object detection worker exited:", code);
-    objDetectionWorker = null;
-  });
-
+  objDetectionWorker.on("exit", () => { objDetectionWorker = null; });
   console.log("Object detection worker started");
 });
 
-//forward frames to worker
+
+ipcMain.on('log-to-terminal', (event, msg) => {
+  console.log(`📝 [Renderer]: ${msg}`);
+});
 
 ipcMain.on("object-frame", (_, frame) => {
-  if (!objDetectionWorker) return;
-  objDetectionWorker.postMessage(frame);
+  if (objDetectionWorker) objDetectionWorker.postMessage(frame);
 });
