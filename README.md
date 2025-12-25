@@ -40,9 +40,9 @@ Real-time object detection powered by **TensorFlow.js**, running entirely locall
 * **Zero IPC Overhead:** Because the Renderer talks directly to the GPU, data does not need to pass through the Main Process (Node.js), resulting in extremely low latency token generation.
 
 #### Key Features
-***Private & Offline:** Runs entirely on your hardware. No data is sent to external clouds or APIs.
-***Fast Interrupt (Stop Button):** Implements a "Soft Reset" architecture. Clicking Stop instantly halts generation, visually reverts the interrupted message, and releases GPU locks without requiring a full model reload.
-***Context Management:** Maintains chat history in memory, allowing for seamless context restoration even after interrupting generation.
+**Private & Offline:** Runs entirely on your hardware. No data is sent to external clouds or APIs.
+**Fast Interrupt (Stop Button):** Implements a "Soft Reset" architecture. Clicking Stop instantly halts generation, visually reverts the interrupted message, and releases GPU locks without requiring a full model reload.
+**Context Management:** Maintains chat history in memory, allowing for seamless context restoration even after interrupting generation.
 
 #### Model Support
 * **Default:** Automatically downloads and caches `Mistral-7B-Instruct-v0.3-q4f16_1-MLC` (~4GB).
