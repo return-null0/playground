@@ -7,7 +7,7 @@
 </p>
 
 ## Overview
-A high-performance, cross-platform Electron application designed for experimenting with local AI models. The app features a modular architecture that separates the UI thread from heavy AI inference tasks, ensuring a smooth **60 FPS** camera preview even while running complex neural networks in the background.
+A high-performance, cross-platform Electron application designed for experimenting with local AI models. The app features a modular architecture that separates the UI thread from heavy AI inference tasks, ensuring a smooth camera preview even while running complex neural networks in the background.
 
 The app supports AI integration in two distinct modes, maintaining a clean separation between raw data processing and the user interface.
 
@@ -103,6 +103,10 @@ npm install
 ```
 npm run make
 ```
+or
+```
+npm run build:mac
+```
 
 3. Locate Your App
 
@@ -111,5 +115,5 @@ npm run make
 | Operating System | Output Format | Location |
 | :--- | :--- | :--- |
 | **Windows** | Setup `.exe` | `out/make/squirrel.windows/` |
-| **macOS** | Application `.app` | `out/make/zip/darwin/` |
+| **macOS** | Application `.app` | `/out/AI Playground-darwin-arm64/` |
 | **Linux** | `.deb` / `.rpm` | `out/make/deb/` |

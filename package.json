@@ -8,7 +8,10 @@
     "start": "electron-forge start",
     "test": "echo \\\"Error: no test specified\\\" && exit 1",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+
+
+"build:mac": "npm run make && chmod -R 755 \"out/AI Playground-darwin-arm64/AI Playground.app\" && xattr -cr \"out/AI Playground-darwin-arm64/AI Playground.app\" && codesign --force --deep --sign - --entitlements entitlements.plist \"out/AI Playground-darwin-arm64/AI Playground.app\" "
   },
   "author": "Renaldo Hyacinthe",
   "license": "ISC",
@@ -28,7 +31,6 @@
     "@mlc-ai/web-llm": "^0.2.80",
     "@tensorflow/tfjs-node": "^4.22.0",
     "dotenv": "^17.2.3",
-    "electron-squirrel-startup": "^1.0.1",
-    "onnxruntime-node": "file:../onnxruntime/js/node"
+    "electron-squirrel-startup": "^1.0.1"
   }
 }

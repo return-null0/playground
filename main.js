@@ -22,7 +22,8 @@ const createWindow = () => {
     webPreferences: {
       preload: path.join(__dirname, "scripts/preload.js"),
       nodeIntegration: false,
-      contextIsolation: true
+      contextIsolation: true,
+      nodeIntegrationInWorker: true
     }
   });
 
@@ -35,6 +36,13 @@ const createWindow = () => {
   });
 };
 
+  function getModelPath() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, "models", "image");
+  } else {
+    return path.join(__dirname, "..", "models", "image");
+  }
+}
 
 app.whenReady().then(() => {
   if (process.platform === 'darwin') {
@@ -64,7 +72,11 @@ ipcMain.handle("start-object-worker", () => {
   objDetectionWorker = utilityProcess.fork(
     path.join(__dirname, "scripts/objDetectionWorker.js"),
     [],
-    { stdio: "pipe" }
+    {     stdio: "pipe",
+    env: {
+      ...process.env,
+      MODEL_DIR: getModelPath()
+    }}
   );
 
   objDetectionWorker.stdout.on('data', (data) => console.log(`[Worker]: ${data}`));

@@ -1,9 +1,22 @@
-const tf = require("@tensorflow/tfjs-node");
 const path = require("path");
+
+const binaryPath = path.join(
+    process.resourcesPath,
+    'app.asar.unpacked',
+    'node_modules',
+    '@tensorflow',
+    'tfjs-node',
+    'lib',
+    'napi-v8',
+    'tfjs_binding.node'
+);
+
+process.env.TF_NODE_BINARY_PATH = binaryPath;
+
+const tf = require('@tensorflow/tfjs-node');
 
 let model = null;
 
-// COCO Label Map
 const LABEL_MAP = {
   1: 'person', 2: 'bicycle', 3: 'car', 4: 'motorcycle', 5: 'airplane',
   6: 'bus', 7: 'train', 8: 'truck', 9: 'boat', 10: 'traffic light',
@@ -24,14 +37,24 @@ const LABEL_MAP = {
   89: 'hair drier', 90: 'toothbrush'
 };
 
+
 async function loadModel() {
-  const modelDir = path.join(__dirname, "..", "models/image");
-
-  const modelUrl = `file://${modelDir}/model.json`;
-
   try {
+    let modelUrl;
+
+    // Check if we are running in the packaged app
+    if (__dirname.includes('Resources') || __dirname.includes('app.asar')) {
+        // PRODUCTION: Path: .../Contents/Resources/image/model.json
+        modelUrl = `file://${path.join(process.resourcesPath, 'image', 'model.json')}`;
+    } else {
+        // DEVELOPMENT: .../models/image/model.json
+        modelUrl = `file://${path.join(__dirname, 'models', 'image', 'model.json')}`;
+    }
+
+    console.log(`Worker loading model from: ${modelUrl}`);
+
     model = await tf.loadGraphModel(modelUrl);
-    console.log(`Object Detection Loaded: ${tf.getBackend().toUpperCase()}`);
+    console.log("Object Detection Loaded:", tf.getBackend().toUpperCase());
   } catch (error) {
     console.error("Failed to load model:", error.message);
   }
@@ -39,18 +62,17 @@ async function loadModel() {
 
 loadModel();
 
+
 process.parentPort.on("message", async (e) => {
-  const msg = e.data;
+  const msg = e.data; 
+
   if (!model || msg.type !== "FRAME_DATA") return;
 
-  // Variables to hold tensors that must survive until the end
   let inputTensor, results, nmsIndices;
   let boxes2D, maxScores, classes1D; 
   let finalBoxes, finalScores, finalClasses;
 
   try {
-
-    // 1. PREPARE INPUT (Sync Tidy)
 
     inputTensor = tf.tidy(() => {
       const rgba = tf.tensor3d(msg.data, [msg.height, msg.width, 4], 'int32');
@@ -60,46 +82,34 @@ process.parentPort.on("message", async (e) => {
     });
 
 
-    // 2. EXECUTE MODEL (Async)
-
     results = await model.executeAsync(inputTensor);
 
-    // Identify outputs based on shape
     let scoresTensorRaw, boxesTensorRaw;
     const outputArray = Array.isArray(results) ? results : Object.values(results);
     
     outputArray.forEach(t => {
-        if (t.shape.length === 4 && t.shape[3] === 4) boxesTensorRaw = t; // [1, 1917, 1, 4]
-        else if (t.shape.length === 3 && t.shape[2] === 90) scoresTensorRaw = t; // [1, 1917, 90]
+        if (t.shape.length === 4 && t.shape[3] === 4) boxesTensorRaw = t; 
+        else if (t.shape.length === 3 && t.shape[2] === 90) scoresTensorRaw = t; 
     });
 
     if (!boxesTensorRaw || !scoresTensorRaw) throw new Error("Output shape mismatch");
 
 
-    // 3. PREPARE FOR NMS (Sync Tidy)
-    // We process raw output into the flat 1D/2D arrays NMS needs.
-    // We return these tensors to keep them alive for the async NMS step.
-
     ({ boxes2D, maxScores, classes1D } = tf.tidy(() => {
-        const b = boxesTensorRaw.squeeze(); // [1917, 4] (removes batch & single dims)
-        const s = scoresTensorRaw.squeeze(); // [1917, 90]
+        const b = boxesTensorRaw.squeeze();
+        const s = scoresTensorRaw.squeeze();
         return {
             boxes2D: b,
-            maxScores: s.max(1), // Best score for each box [1917]
-            classes1D: s.argMax(1) // Class index for each box [1917]
+            maxScores: s.max(1),
+            classes1D: s.argMax(1)
         };
     }));
 
 
-    // 4. RUN NMS
-
-    // Keeps up to 20 boxes with > 50% confidence, removing overlaps
     nmsIndices = await tf.image.nonMaxSuppressionAsync(
         boxes2D, maxScores, 20, 0.5, 0.5
     );
 
-
-    // 5. GATHER FINAL RESULTS (Sync Tidy)
 
     const finalData = tf.tidy(() => {
         return {
@@ -114,15 +124,12 @@ process.parentPort.on("message", async (e) => {
     finalClasses = finalData.classes;
 
 
-    // 6. DOWNLOAD TO CPU (Async)
-
     const [b, s, c] = await Promise.all([
         finalBoxes.array(),
         finalScores.array(),
         finalClasses.array()
     ]);
 
-    // Renderer format
     const detectedObjects = b.map((box, i) => ({
         class: LABEL_MAP[c[i] + 1] || 'unknown',
         score: s[i],
@@ -144,19 +151,15 @@ process.parentPort.on("message", async (e) => {
     console.error("Worker Error:", err);
   } finally {
 
-    // 7. CLEANUP
-
     if (inputTensor) inputTensor.dispose();
     if (results) {
         if (Array.isArray(results)) results.forEach(t => t.dispose());
         else Object.values(results).forEach(t => t.dispose());
     }
-    // Intermediate NMS inputs
     if (boxes2D) boxes2D.dispose();
     if (maxScores) maxScores.dispose();
     if (classes1D) classes1D.dispose();
     if (nmsIndices) nmsIndices.dispose();
-    // Final outputs
     if (finalBoxes) finalBoxes.dispose();
     if (finalScores) finalScores.dispose();
     if (finalClasses) finalClasses.dispose();

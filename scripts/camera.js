@@ -5,7 +5,7 @@ const rawCtx = rawCanvas.getContext("2d");
 
 // Small offscreen canvas for AI processing (Resizing to 640px improves performance)
 const aiCanvas = document.createElement("canvas");
-const aiCtx = aiCanvas.getContext("2d");
+const aiCtx = aiCanvas.getContext('2d', { willReadFrequently: true });
 const AI_WIDTH = 640; 
 let AI_HEIGHT = 480; // Calculated dynamically
 
